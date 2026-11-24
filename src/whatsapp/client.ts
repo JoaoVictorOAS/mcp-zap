@@ -4,7 +4,8 @@ import makeWASocket, {
   Browsers,
   WASocket,
   proto,
-  downloadMediaMessage
+  downloadMediaMessage,
+  fetchLatestBaileysVersion
 } from '@whiskeysockets/baileys';
 import pino from 'pino';
 import fs from 'node:fs';
@@ -69,12 +70,20 @@ export class WhatsAppClient {
       level: this.silent ? 'silent' : 'warn'
     }, process.stderr);
 
+    let version: [number, number, number] | undefined;
+    try {
+      const latest = await fetchLatestBaileysVersion();
+      version = latest.version;
+    } catch {
+      // Fallback to Baileys bundled version if offline
+    }
+
     this.sock = makeWASocket({
+      version,
       auth: state,
       logger,
       printQRInTerminal: false,
       browser: Browsers.macOS('Desktop'),
-      syncFullHistory: true,
       generateHighQualityLinkPreview: false
     });
 
