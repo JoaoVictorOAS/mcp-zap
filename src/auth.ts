@@ -1,14 +1,19 @@
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import qrcode from 'qrcode-terminal';
 import { WhatsAppClient } from './whatsapp/client.js';
 import { DatabaseManager } from './storage/db.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const PROJECT_ROOT = path.resolve(__dirname, '..');
 
 console.log('====================================================');
 console.log('       WhatsApp MCP - Autenticação por QR Code      ');
 console.log('====================================================\n');
 
-const db = new DatabaseManager('data/whatsapp.db');
+const db = new DatabaseManager(path.join(PROJECT_ROOT, 'data/whatsapp.db'));
 const client = new WhatsAppClient({
-  authDir: '.auth',
+  authDir: path.join(PROJECT_ROOT, '.auth'),
   db,
   silent: true
 });

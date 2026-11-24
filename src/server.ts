@@ -1,7 +1,13 @@
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { WhatsAppClient } from './whatsapp/client.js';
 import { DatabaseManager } from './storage/db.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const PROJECT_ROOT = path.resolve(__dirname, '..');
+const DEFAULT_DOWNLOADS_DIR = path.join(PROJECT_ROOT, 'downloads');
 
 export function createMcpServer(client: WhatsAppClient, db: DatabaseManager): McpServer {
   const server = new McpServer({
@@ -299,7 +305,7 @@ export function createMcpServer(client: WhatsAppClient, db: DatabaseManager): Mc
         .optional()
         .describe('Nome personalizado opcional para o arquivo (ex: "relatorio_mensal.pdf")')
     },
-    async ({ message_id, output_dir = './downloads', custom_filename }) => {
+    async ({ message_id, output_dir = DEFAULT_DOWNLOADS_DIR, custom_filename }) => {
       try {
         const result = await client.downloadMedia(message_id, output_dir, custom_filename);
         return {
