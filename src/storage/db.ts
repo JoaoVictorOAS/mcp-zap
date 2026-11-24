@@ -329,6 +329,40 @@ export class DatabaseManager {
     }));
   }
 
+  public getMessageById(id: string): MessageRecord | null {
+    const stmt = this.db.prepare(`
+      SELECT id, chat_id, sender_jid, sender_name, from_me, timestamp, text, media_type, raw_json
+      FROM messages
+      WHERE id = ?
+      LIMIT 1
+    `);
+    const row = stmt.get(id) as {
+      id: string;
+      chat_id: string;
+      sender_jid: string;
+      sender_name: string | null;
+      from_me: number;
+      timestamp: number;
+      text: string;
+      media_type: string | null;
+      raw_json: string | null;
+    } | undefined;
+
+    if (!row) return null;
+
+    return {
+      id: row.id,
+      chatId: row.chat_id,
+      senderJid: row.sender_jid,
+      senderName: row.sender_name,
+      fromMe: row.from_me === 1,
+      timestamp: row.timestamp,
+      text: row.text,
+      mediaType: row.media_type,
+      rawJson: row.raw_json
+    };
+  }
+
   public getContactName(jid: string): string | null {
     const stmt = this.db.prepare(`
       SELECT name, notify FROM contacts WHERE jid = ?

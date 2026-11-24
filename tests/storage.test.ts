@@ -104,5 +104,12 @@ test('DatabaseManager - in-memory CRUD & pagination tests', async (t) => {
     assert.equal(results[0].id, 'msg_1');
   });
 
+  await t.test('should retrieve message by id with rawJson', () => {
+    const msg = db.getMessageById('msg_1');
+    assert.ok(msg);
+    assert.equal(msg.id, 'msg_1');
+    assert.equal(msg.chatId, 'group1@g.us');
+  });
+
   db.close();
 });

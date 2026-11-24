@@ -2,6 +2,8 @@ node_modules/
 dist/
 .auth/
 data/
+downloads/
 .env
 *.log
 .superpowers/
+

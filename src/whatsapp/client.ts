@@ -3,7 +3,8 @@ import makeWASocket, {
   DisconnectReason,
   Browsers,
   WASocket,
-  proto
+  proto,
+  downloadMediaMessage
 } from '@whiskeysockets/baileys';
 import pino from 'pino';
 import fs from 'node:fs';
@@ -205,6 +206,92 @@ export class WhatsAppClient {
         admin: p.admin || null,
         name: this.db.getContactName(p.id) || null
       }))
+    };
+  }
+
+  public async downloadMedia(
+    messageId: string,
+    outputDir: string = './downloads',
+    customFilename?: string
+  ): Promise<{
+    filePath: string;
+    fileName: string;
+    fileSizeBytes: number;
+    mimeType: string;
+    mediaType: string;
+  }> {
+    const record = this.db.getMessageById(messageId);
+    if (!record) {
+      throw new Error(`Mensagem com ID "${messageId}" não encontrada no banco de dados local.`);
+    }
+
+    if (!record.rawJson) {
+      throw new Error(`A mensagem "${messageId}" não possui dados brutos para download de mídia.`);
+    }
+
+    const wamessage = JSON.parse(record.rawJson) as proto.IWebMessageInfo;
+    const m = wamessage.message;
+    if (!m) {
+      throw new Error(`A mensagem "${messageId}" não possui conteúdo multimídia.`);
+    }
+
+    let defaultFileName = `media_${messageId}`;
+    let mimeType = 'application/octet-stream';
+    let detectedType = record.mediaType || 'media';
+
+    if (m.documentMessage) {
+      detectedType = 'document';
+      defaultFileName = m.documentMessage.fileName || `documento_${messageId}.pdf`;
+      mimeType = m.documentMessage.mimetype || 'application/pdf';
+    } else if (m.imageMessage) {
+      detectedType = 'image';
+      mimeType = m.imageMessage.mimetype || 'image/jpeg';
+      const ext = mimeType.split('/')[1]?.split(';')[0] || 'jpeg';
+      defaultFileName = `imagem_${messageId}.${ext}`;
+    } else if (m.videoMessage) {
+      detectedType = 'video';
+      mimeType = m.videoMessage.mimetype || 'video/mp4';
+      defaultFileName = `video_${messageId}.mp4`;
+    } else if (m.audioMessage) {
+      detectedType = 'audio';
+      mimeType = m.audioMessage.mimetype || 'audio/ogg';
+      defaultFileName = `audio_${messageId}.ogg`;
+    } else if (m.stickerMessage) {
+      detectedType = 'sticker';
+      mimeType = m.stickerMessage.mimetype || 'image/webp';
+      defaultFileName = `sticker_${messageId}.webp`;
+    }
+
+    const finalFileName = customFilename || defaultFileName;
+    const resolvedDir = path.resolve(outputDir);
+    if (!fs.existsSync(resolvedDir)) {
+      fs.mkdirSync(resolvedDir, { recursive: true });
+    }
+
+    const destinationPath = path.join(resolvedDir, finalFileName);
+
+    // Call Baileys downloadMediaMessage
+    const buffer = await downloadMediaMessage(
+      wamessage,
+      'buffer',
+      {},
+      {
+        logger: pino({ level: 'silent' }),
+        reuploadRequest: (msg) => {
+          if (!this.sock) throw new Error('WhatsApp não conectado para reupload de mídia');
+          return this.sock.updateMediaMessage(msg);
+        }
+      }
+    );
+
+    await fs.promises.writeFile(destinationPath, buffer);
+
+    return {
+      filePath: destinationPath,
+      fileName: finalFileName,
+      fileSizeBytes: buffer.length,
+      mimeType,
+      mediaType: detectedType
     };
   }
 

@@ -71,4 +71,30 @@ test('parseMessage - handles direct messages and group messages', () => {
   assert.equal(parsedImage.fromMe, true);
   assert.equal(parsedImage.mediaType, 'image');
   assert.equal(parsedImage.text, '[Imagem: Olha o gráfico]');
+  assert.ok(parsedImage.rawJson);
+
+  // Test document message (PDF/DOC)
+  const docMsg = {
+    key: {
+      id: 'DOC123',
+      remoteJid: '5511999999999@s.whatsapp.net',
+      fromMe: false
+    },
+    messageTimestamp: 1700000300,
+    message: {
+      documentMessage: {
+        fileName: 'contrato.pdf',
+        mimetype: 'application/pdf',
+        caption: 'Contrato assinado'
+      }
+    }
+  };
+
+  const parsedDoc = parseMessage(docMsg);
+  assert.ok(parsedDoc);
+  assert.equal(parsedDoc.id, 'DOC123');
+  assert.equal(parsedDoc.mediaType, 'document');
+  assert.equal(parsedDoc.text, '[Documento: contrato.pdf (Contrato assinado)]');
+  assert.ok(parsedDoc.rawJson);
+  assert.equal(JSON.parse(parsedDoc.rawJson!).key.id, 'DOC123');
 });

@@ -83,6 +83,7 @@ export function parseMessage(msg: proto.IWebMessageInfo): MessageRecord | null {
     fromMe,
     timestamp,
     text,
-    mediaType
+    mediaType,
+    rawJson: JSON.stringify(msg)
   };
 }

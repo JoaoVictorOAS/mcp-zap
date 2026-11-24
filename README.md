@@ -97,6 +97,7 @@ Adicione o servidor no seu arquivo de configuração:
 | `whatsapp_search_messages` | Busca por palavras-chave em mensagens salvas. | `query` (termo a buscar), `limit` |
 | `whatsapp_fetch_older_messages` | Solicita ao WhatsApp mensagens mais antigas que ainda não estão no banco local. | `jid` (obrigatório), `count` (máx 50) |
 | `whatsapp_get_group_info` | Retorna participantes, administradores e descrição de um grupo. | `group_jid` (ID terminado em `@g.us`) |
+| `whatsapp_download_media` | Baixa arquivos, PDFs, documentos, imagens e áudios recebidos para o disco local. | `message_id` (obrigatório, visível em `[ID: ...]`), `output_dir` (padrão: `./downloads`), `custom_filename` (opcional) |
 
 ---
 
@@ -105,7 +106,8 @@ Adicione o servidor no seu arquivo de configuração:
 - *"Liste os meus últimos 10 grupos do WhatsApp."*
 - *"Leia as últimas 30 mensagens do grupo dos desenvolvedores."*
 - *"Pegue as 20 mensagens anteriores a essas no mesmo grupo."*
-- *"Pesquise nas minhas mensagens do WhatsApp onde mencionaram 'reunião amanhã'."*
+- *"Baixe o arquivo PDF que enviaram no grupo dos desenvolvedores."*
+- *"Pesquise nas minhas mensagens do WhatsApp onde mencionaram 'relatório' e baixe o documento correspondente."*
 - *"Quem são os participantes e administradores do grupo X?"*
 
 ---

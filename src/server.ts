@@ -124,7 +124,8 @@ export function createMcpServer(client: WhatsAppClient, db: DatabaseManager): Mc
         if (m.chatId.endsWith('@g.us') && !m.fromMe) {
           sender = `[Grupo] ${sender}`;
         }
-        return `[${dateStr}] ${sender}: ${m.text}`;
+        const mediaTag = m.mediaType ? ` [Mídia: ${m.mediaType}]` : '';
+        return `[ID: ${m.id}] [${dateStr}] ${sender}${mediaTag}: ${m.text}`;
       });
 
       const responsePayload = {
@@ -269,6 +270,62 @@ export function createMcpServer(client: WhatsAppClient, db: DatabaseManager): Mc
               type: 'text',
               text: JSON.stringify(
                 {
+                  error: err instanceof Error ? err.message : String(err)
+                },
+                null,
+                2
+              )
+            }
+          ]
+        };
+      }
+    }
+  );
+
+  // Tool 7: whatsapp_download_media
+  server.tool(
+    'whatsapp_download_media',
+    'Baixa arquivos, documentos (PDF, DOCX, planilhas), imagens, áudios ou vídeos recebidos em conversas ou grupos e salva no disco local',
+    {
+      message_id: z
+        .string()
+        .describe('ID da mensagem que contém o arquivo/mídia (visível no campo [ID: ...] em whatsapp_get_messages)'),
+      output_dir: z
+        .string()
+        .optional()
+        .describe('Diretório local onde o arquivo será salvo (padrão: "./downloads")'),
+      custom_filename: z
+        .string()
+        .optional()
+        .describe('Nome personalizado opcional para o arquivo (ex: "relatorio_mensal.pdf")')
+    },
+    async ({ message_id, output_dir = './downloads', custom_filename }) => {
+      try {
+        const result = await client.downloadMedia(message_id, output_dir, custom_filename);
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(
+                {
+                  status: 'success',
+                  message: `Arquivo baixado com sucesso em "${result.filePath}".`,
+                  file: result
+                },
+                null,
+                2
+              )
+            }
+          ]
+        };
+      } catch (err: unknown) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(
+                {
+                  status: 'error',
                   error: err instanceof Error ? err.message : String(err)
                 },
                 null,
